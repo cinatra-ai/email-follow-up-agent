@@ -1,0 +1,268 @@
+{
+  "agentspec_version": "26.1.0",
+  "component_type": "Flow",
+  "id": "email-follow-up-flow",
+  "name": "Email Follow-up Agent",
+  "description": "Generates follow-up email drafts for recipients who did not respond to the initial outreach.",
+  "metadata": {
+    "cinatra": {
+      "type": "node",
+      "hitlScreens": [
+        "@cinatra-ai/reviewer-agent:output"
+      ],
+      "packageName": "@cinatra-ai/email-follow-up-agent",
+      "packageVersion": "0.1.1"
+    }
+  },
+  "inputs": [
+    {
+      "title": "campaignId",
+      "type": "string",
+      "json_schema": {
+        "format": "uuid"
+      }
+    },
+    {
+      "title": "followUpDays",
+      "type": "array",
+      "json_schema": {
+        "items": {
+          "type": "integer"
+        }
+      }
+    },
+    {
+      "title": "agent_run_id",
+      "type": "string",
+      "default": ""
+    }
+  ],
+  "outputs": [
+    {
+      "title": "followupBundle",
+      "type": "object"
+    },
+    {
+      "title": "userResponse",
+      "type": "string"
+    }
+  ],
+  "start_node": {
+    "$component_ref": "start"
+  },
+  "nodes": [
+    {
+      "$component_ref": "start"
+    },
+    {
+      "$component_ref": "followup"
+    },
+    {
+      "$component_ref": "approval_gate"
+    },
+    {
+      "$component_ref": "end"
+    }
+  ],
+  "control_flow_connections": [
+    {
+      "component_type": "ControlFlowEdge",
+      "name": "start_to_followup",
+      "from_node": {
+        "$component_ref": "start"
+      },
+      "to_node": {
+        "$component_ref": "followup"
+      }
+    },
+    {
+      "component_type": "ControlFlowEdge",
+      "name": "followup_to_approval_gate",
+      "from_node": {
+        "$component_ref": "followup"
+      },
+      "to_node": {
+        "$component_ref": "approval_gate"
+      }
+    },
+    {
+      "component_type": "ControlFlowEdge",
+      "name": "approval_gate_to_end",
+      "from_node": {
+        "$component_ref": "approval_gate"
+      },
+      "to_node": {
+        "$component_ref": "end"
+      }
+    }
+  ],
+  "data_flow_connections": [
+    {
+      "component_type": "DataFlowEdge",
+      "name": "start_to_followup_campaignId",
+      "source_node": {
+        "$component_ref": "start"
+      },
+      "source_output": "campaignId",
+      "destination_node": {
+        "$component_ref": "followup"
+      },
+      "destination_input": "campaignId"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "start_to_followup_followUpDays",
+      "source_node": {
+        "$component_ref": "start"
+      },
+      "source_output": "followUpDays",
+      "destination_node": {
+        "$component_ref": "followup"
+      },
+      "destination_input": "followUpDays"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "start_to_followup_agent_run_id",
+      "source_node": {
+        "$component_ref": "start"
+      },
+      "source_output": "agent_run_id",
+      "destination_node": {
+        "$component_ref": "followup"
+      },
+      "destination_input": "agent_run_id"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "followup_to_end_followupBundle",
+      "source_node": {
+        "$component_ref": "followup"
+      },
+      "source_output": "followupBundle",
+      "destination_node": {
+        "$component_ref": "end"
+      },
+      "destination_input": "followupBundle"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "approval_gate_to_end_userResponse",
+      "source_node": {
+        "$component_ref": "approval_gate"
+      },
+      "source_output": "userResponse",
+      "destination_node": {
+        "$component_ref": "end"
+      },
+      "destination_input": "userResponse"
+    }
+  ],
+  "$referenced_components": {
+    "start": {
+      "component_type": "StartNode",
+      "id": "start",
+      "name": "Inputs",
+      "metadata": {
+        "cinatra": {
+          "required": [
+            "campaignId"
+          ],
+          "hidden": [
+            "campaignId",
+            "agent_run_id"
+          ],
+          "inputRenderers": {
+            "followUpDays": "@cinatra-ai/email-follow-up-agent:follow-up-cadence"
+          }
+        }
+      },
+      "inputs": [
+        {
+          "title": "campaignId",
+          "type": "string",
+          "json_schema": {
+            "format": "uuid"
+          }
+        },
+        {
+          "title": "followUpDays",
+          "type": "array",
+          "json_schema": {
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "title": "agent_run_id",
+          "type": "string",
+          "default": ""
+        }
+      ]
+    },
+    "followup": {
+      "component_type": "ApiNode",
+      "id": "followup",
+      "name": "Draft follow-up emails",
+      "url": "{{CINATRA_BASE_URL}}/api/llm-bridge",
+      "http_method": "POST",
+      "data": {
+        "system": "You are an email follow-up drafting agent. Generate a follow-up email sequence for an outreach campaign and return it as JSON: {\"draftedEmails\":[{\"recipientId\":\"follow-up-<stepNumber>\",\"recipientName\":\"\",\"recipientEmail\":\"\",\"subject\":\"<subject>\",\"body\":\"<body>\",\"followUpDay\":<day offset>}],\"summary\":\"<one sentence summary>\"}. Do not send email — this agent only drafts follow-ups.",
+        "user": "Execute the follow-up drafting task now and return the result as JSON.\nInputs:\n- campaignId: {{ campaignId }}\n- followUpDays: {{ followUpDays }}",
+        "agent_id": "email-follow-up",
+        "agent_run_id": "{{ agent_run_id }}",
+        "cinatra_llm": {
+          "preferredProvider": "openai",
+          "preferredModel": "gpt-5.5"
+        }
+      },
+      "outputs": [
+        {
+          "title": "followupBundle",
+          "type": "object"
+        }
+      ],
+      "metadata": {
+        "cinatra": {
+          "riskClass": "draft_create",
+          "requiresApproval": false
+        }
+      }
+    },
+    "end": {
+      "component_type": "EndNode",
+      "id": "end",
+      "name": "End",
+      "outputs": [
+        {
+          "title": "followupBundle",
+          "type": "object"
+        },
+        {
+          "title": "userResponse",
+          "type": "string"
+        }
+      ]
+    },
+    "approval_gate": {
+      "component_type": "InputMessageNode",
+      "id": "approval_gate",
+      "name": "Review and approve",
+      "metadata": {
+        "cinatra": {
+          "riskClass": "approval",
+          "requiresApproval": true,
+          "renderer": "@cinatra-ai/reviewer-agent:followups-output",
+          "a2uiSurfaceId": "reviewer:approval-gate:input"
+        }
+      },
+      "outputs": [
+        {
+          "title": "userResponse",
+          "type": "string"
+        }
+      ]
+    }
+  }
+}
