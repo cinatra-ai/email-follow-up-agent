@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output (tsconfig outDir) + npm pack tarballs
+dist/
+*.tgz
+
+# Lockfile is intentionally not committed (CI installs with --no-frozen-lockfile)
+pnpm-lock.yaml
+
+# Testing
+coverage/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
