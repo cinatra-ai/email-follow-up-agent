@@ -25,6 +25,19 @@
     ],
     "agentDependencies": {
       "@cinatra-ai/reviewer-agent": "^0.1.0"
-    }
+    },
+    "fieldRenderers": [
+      {
+        "id": "@cinatra-ai/email-follow-up-agent:follow-up-cadence",
+        "kind": "follow-up-cadence",
+        "priority": 90
+      },
+      {
+        "id": "@cinatra-ai/email-follow-up-agent:output",
+        "kind": "email-drafts-review",
+        "priority": 80,
+        "a2uiTranslator": "followups-output"
+      }
+    ]
   }
 }
