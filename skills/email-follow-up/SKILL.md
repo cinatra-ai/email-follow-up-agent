@@ -42,7 +42,7 @@ The orchestrator wires `followupBundleRef` into the next subflow via DataFlowEdg
 - Less salesy, less pushy tone — audience is technical.
 - Mention a relevant pain point or reason this follow-up matters.
 - Use the initial draft and recipient context to make each follow-up individually relevant.
-- Use a greeting placeholder rather than a literal contact name.
+- Use a generic greeting (for example, "Hi there,") rather than a literal contact name; the cadence is shared across recipients.
 - Do not paste timing information ("this is day 7") into the email body.
 - Apply any mounted skills.
 
