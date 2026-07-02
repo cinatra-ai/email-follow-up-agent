@@ -38,6 +38,7 @@
         "priority": 80,
         "a2uiTranslator": "followups-output"
       }
-    ]
+    ],
+    "consumes": []
   }
 }
