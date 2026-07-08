@@ -11,6 +11,7 @@
   "cinatra": {
     "apiVersion": "cinatra.ai/v1",
     "kind": "agent",
+    "displayName": "Email Follow-up Agent",
     "dependencies": [
       {
         "packageName": "@cinatra-ai/reviewer-agent",
@@ -44,6 +45,15 @@
         "a2uiTranslator": "followups-output"
       }
     ],
-    "consumes": []
+    "consumes": [],
+    "packageType": "agent",
+    "manifestVersion": 1,
+    "sourceTemplateId": "email-follow-up-flow",
+    "sourceVersionId": "ff2305ae-0aeb-441a-bce2-813390f38eda",
+    "sourceVersionNumber": 1,
+    "riskLevel": "low",
+    "hasApprovalGates": true,
+    "toolAccess": [],
+    "ownerOrgId": null
   }
 }
