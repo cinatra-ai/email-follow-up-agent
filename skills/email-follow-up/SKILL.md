@@ -49,7 +49,7 @@ MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one
 `followupBundle.summary` and is the artifact title source.
 
 The platform materializes `followupDigest` as a persisted artifact
-(`@cinatra-ai/email-body-artifact`) declaratively from the flow's EndNode output binding — there
+(`@cinatra-ai/email-artifacts`) declaratively from the flow's EndNode output binding — there
 is no manual save step; do not call any MCP persistence tool.
 
 ## Follow-up draft quality standards
