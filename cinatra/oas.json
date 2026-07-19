@@ -13,7 +13,7 @@
       "packageName": "@cinatra-ai/email-follow-up-agent",
       "produces": [
         {
-          "extension": "@cinatra-ai/email-body-artifact"
+          "extension": "@cinatra-ai/email-artifacts"
         }
       ]
     }
@@ -288,7 +288,7 @@
           "type": "string",
           "cinatra": {
             "artifact": {
-              "extension": "@cinatra-ai/email-body-artifact",
+              "extension": "@cinatra-ai/email-artifacts",
               "contentFrom": "followupDigest",
               "declaredMime": "text/markdown",
               "titleFrom": "summary"
