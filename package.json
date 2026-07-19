@@ -1,6 +1,6 @@
 {
   "name": "@cinatra-ai/email-follow-up-agent",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "Apache-2.0",
   "files": [
     "cinatra",
@@ -39,7 +39,8 @@
     },
     "produces": [
       {
-        "extension": "@cinatra-ai/email-artifacts"
+        "extension": "@cinatra-ai/email-artifacts",
+        "objectTypeId": "@cinatra-ai/email:body"
       }
     ],
     "fieldRenderers": [
