@@ -161,11 +161,11 @@
     },
     {
       "component_type": "DataFlowEdge",
-      "name": "followup_to_end_followupBundle",
+      "name": "apply_to_end_followupBundle",
       "source_node": {
-        "$component_ref": "followup"
+        "$component_ref": "apply"
       },
-      "source_output": "followupBundle",
+      "source_output": "reviewedBundle",
       "destination_node": {
         "$component_ref": "end"
       },
@@ -173,11 +173,11 @@
     },
     {
       "component_type": "DataFlowEdge",
-      "name": "followup_to_end_followupDigest",
+      "name": "apply_to_end_followupDigest",
       "source_node": {
-        "$component_ref": "followup"
+        "$component_ref": "apply"
       },
-      "source_output": "followupDigest",
+      "source_output": "reviewedDocument",
       "destination_node": {
         "$component_ref": "end"
       },
@@ -294,8 +294,8 @@
       "url": "{{CINATRA_BASE_URL}}/api/llm-bridge",
       "http_method": "POST",
       "data": {
-        "system": "You are an email follow-up drafting agent. Generate a follow-up email sequence for an outreach campaign and return it as JSON with exactly three top-level keys: {\"followupBundle\":{\"draftedEmails\":[{\"recipientId\":\"follow-up-<stepNumber>\",\"recipientName\":\"\",\"recipientEmail\":\"\",\"subject\":\"<subject>\",\"body\":\"<body>\",\"followUpDay\":<day offset>}],\"summary\":\"<one sentence summary>\"},\"followupDigest\":\"<markdown>\",\"summary\":\"<same one sentence summary>\"}. `followupDigest` MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one `## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by `**Subject:** <subject>` then the body — never independently redrafted content. Do not send email — this agent only drafts follow-ups.",
-        "user": "Execute the follow-up drafting task now and return the result as JSON.\nInputs:\n- campaignId: {{ campaignId }}\n- followUpDays: {{ followUpDays }}",
+        "system": "You are an email follow-up drafting agent. Generate a follow-up email sequence for an outreach campaign and return it as JSON with exactly three top-level keys: {\"followupBundle\":{\"draftedEmails\":[{\"recipientId\":\"follow-up-<stepNumber>\",\"recipientName\":\"\",\"recipientEmail\":\"\",\"subject\":\"<subject>\",\"body\":\"<body>\",\"followUpDay\":<day offset>}],\"summary\":\"<one sentence summary>\"},\"followupDigest\":\"<markdown>\",\"summary\":\"<same one sentence summary>\"}. `followupDigest` MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one `## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by `**Subject:** <subject>` then the body — never independently redrafted content. PERSIST STEP — BEFORE returning the JSON, call objects_save EXACTLY ONCE to write the generated bundle as this run's pre-gate follow-up-bundle record so the re-entrant review gate can load and update it. Use exactly this structure:\n  objects_save({\"typeHint\":\"@cinatra-ai/campaigns:email-followup-bundle\",\"rawData\":{\"cinatra_agent_run_id\":\"<the agent_run_id input>\",\"campaignId\":\"<the campaignId input>\",\"draftedEmails\":[ ...the SAME draftedEmails array you return in followupBundle... ],\"summary\":\"<the same summary>\"}})\nCall objects_save once only — do not save any other object type and do not send email; this agent only drafts follow-ups.",
+        "user": "Execute the follow-up drafting task now and return the result as JSON.\nInputs:\n- campaignId: {{ campaignId }}\n- followUpDays: {{ followUpDays }}\n- agent_run_id: {{ agent_run_id }}",
         "agent_id": "email-follow-up",
         "agent_run_id": "{{ agent_run_id }}",
         "cinatra_llm": {
@@ -399,6 +399,14 @@
         {
           "title": "ok",
           "type": "boolean"
+        },
+        {
+          "title": "reviewedBundle",
+          "type": "object"
+        },
+        {
+          "title": "reviewedDocument",
+          "type": "string"
         }
       ],
       "metadata": {
