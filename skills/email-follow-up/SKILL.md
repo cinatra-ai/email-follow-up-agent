@@ -48,9 +48,27 @@ MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one
 `**Subject:** <subject>` then the body — never independently redrafted content. `summary` mirrors
 `followupBundle.summary` and is the artifact title source.
 
-The platform materializes `followupDigest` as a persisted artifact
-(`@cinatra-ai/email-artifacts`) declaratively from the flow's EndNode output binding — there
-is no manual save step; do not call any MCP persistence tool.
+STEP 3 — Persist the bundle. BEFORE returning the JSON, call `objects_save` EXACTLY ONCE to write
+the generated bundle as this run's pre-gate follow-up-bundle record. The re-entrant review gate
+loads THIS object, the operator edits it, and the post-approval `apply` node updates it in place —
+so the bundle MUST exist before the gate. Use exactly this structure:
+
+```json
+objects_save({
+  "typeHint": "@cinatra-ai/campaigns:email-followup-bundle",
+  "rawData": {
+    "cinatra_agent_run_id": "<the agent_run_id input>",
+    "campaignId": "<the campaignId input>",
+    "draftedEmails": [ ...the SAME draftedEmails array you return in followupBundle... ],
+    "summary": "<the same summary>"
+  }
+})
+```
+
+Call `objects_save` once only, and save no other object type. The run id is stamped automatically
+from the run context; the reviewed content (not this generated pre-image) is what the flow's
+terminal artifact carries — the `apply` node regenerates the digest server-side from the
+operator-approved bundle.
 
 ## Follow-up draft quality standards
 
@@ -71,4 +89,6 @@ When globally rewriting follow-up drafts:
 
 ## What I retrieve myself (MCP)
 
-None. This agent makes a single LLM call and returns its result directly — no MCP tool calls.
+`objects_save` — called once (STEP 3) to persist the generated follow-up bundle as this run's
+pre-gate record so the re-entrant review gate can load and update it. No read tools; no other
+writes.
