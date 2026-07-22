@@ -74,6 +74,9 @@
       "$component_ref": "approval_gate"
     },
     {
+      "$component_ref": "apply"
+    },
+    {
       "$component_ref": "end"
     }
   ],
@@ -100,9 +103,19 @@
     },
     {
       "component_type": "ControlFlowEdge",
-      "name": "approval_gate_to_end",
+      "name": "approval_gate_to_apply",
       "from_node": {
         "$component_ref": "approval_gate"
+      },
+      "to_node": {
+        "$component_ref": "apply"
+      }
+    },
+    {
+      "component_type": "ControlFlowEdge",
+      "name": "apply_to_end",
+      "from_node": {
+        "$component_ref": "apply"
       },
       "to_node": {
         "$component_ref": "end"
@@ -193,6 +206,42 @@
         "$component_ref": "end"
       },
       "destination_input": "userResponse"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "followup_to_approval_gate_followupBundle",
+      "source_node": {
+        "$component_ref": "followup"
+      },
+      "source_output": "followupBundle",
+      "destination_node": {
+        "$component_ref": "approval_gate"
+      },
+      "destination_input": "followupBundle"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "approval_gate_to_apply_resumePayload",
+      "source_node": {
+        "$component_ref": "approval_gate"
+      },
+      "source_output": "userResponse",
+      "destination_node": {
+        "$component_ref": "apply"
+      },
+      "destination_input": "resumePayload"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "start_to_apply_agent_run_id",
+      "source_node": {
+        "$component_ref": "start"
+      },
+      "source_output": "agent_run_id",
+      "destination_node": {
+        "$component_ref": "apply"
+      },
+      "destination_input": "agent_run_id"
     }
   ],
   "$referenced_components": {
@@ -315,16 +364,49 @@
         "cinatra": {
           "riskClass": "approval",
           "requiresApproval": true,
-          "renderer": "@cinatra-ai/reviewer-agent:followups-output",
-          "a2uiSurfaceId": "reviewer:approval-gate:input"
+          "renderer": "@cinatra-ai/email-follow-up-agent:email-drafts-review",
+          "a2uiSurfaceId": "reviewer:approval-gate:input",
+          "surfaceGateInputs": true
         }
       },
+      "inputs": [
+        {
+          "title": "followupBundle",
+          "type": "object"
+        }
+      ],
       "outputs": [
         {
           "title": "userResponse",
           "type": "string"
         }
       ]
+    },
+    "apply": {
+      "component_type": "ApiNode",
+      "id": "apply",
+      "name": "Persist reviewed follow-ups",
+      "url": "{{CINATRA_BASE_URL}}/api/agents/passthrough",
+      "http_method": "POST",
+      "data": {
+        "tool": "email_outreach_initial_drafts_update",
+        "input": {
+          "resumePayloadJson": "{{ resumePayload }}"
+        },
+        "agent_run_id": "{{ agent_run_id }}"
+      },
+      "outputs": [
+        {
+          "title": "ok",
+          "type": "boolean"
+        }
+      ],
+      "metadata": {
+        "cinatra": {
+          "riskClass": "draft_update",
+          "requiresApproval": false
+        }
+      }
     }
   }
 }
