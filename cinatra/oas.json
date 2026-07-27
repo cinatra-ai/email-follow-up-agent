@@ -7,9 +7,6 @@
   "metadata": {
     "cinatra": {
       "type": "node",
-      "hitlScreens": [
-        "@cinatra-ai/reviewer-agent:output"
-      ],
       "packageName": "@cinatra-ai/email-follow-up-agent",
       "produces": [
         {
@@ -54,10 +51,6 @@
     {
       "title": "summary",
       "type": "string"
-    },
-    {
-      "title": "userResponse",
-      "type": "string"
     }
   ],
   "start_node": {
@@ -69,12 +62,6 @@
     },
     {
       "$component_ref": "followup"
-    },
-    {
-      "$component_ref": "approval_gate"
-    },
-    {
-      "$component_ref": "apply"
     },
     {
       "$component_ref": "end"
@@ -93,29 +80,9 @@
     },
     {
       "component_type": "ControlFlowEdge",
-      "name": "followup_to_approval_gate",
+      "name": "followup_to_end",
       "from_node": {
         "$component_ref": "followup"
-      },
-      "to_node": {
-        "$component_ref": "approval_gate"
-      }
-    },
-    {
-      "component_type": "ControlFlowEdge",
-      "name": "approval_gate_to_apply",
-      "from_node": {
-        "$component_ref": "approval_gate"
-      },
-      "to_node": {
-        "$component_ref": "apply"
-      }
-    },
-    {
-      "component_type": "ControlFlowEdge",
-      "name": "apply_to_end",
-      "from_node": {
-        "$component_ref": "apply"
       },
       "to_node": {
         "$component_ref": "end"
@@ -161,11 +128,11 @@
     },
     {
       "component_type": "DataFlowEdge",
-      "name": "apply_to_end_followupBundle",
+      "name": "followup_to_end_followupBundle",
       "source_node": {
-        "$component_ref": "apply"
+        "$component_ref": "followup"
       },
-      "source_output": "reviewedBundle",
+      "source_output": "followupBundle",
       "destination_node": {
         "$component_ref": "end"
       },
@@ -173,11 +140,11 @@
     },
     {
       "component_type": "DataFlowEdge",
-      "name": "apply_to_end_followupDigest",
+      "name": "followup_to_end_followupDigest",
       "source_node": {
-        "$component_ref": "apply"
+        "$component_ref": "followup"
       },
-      "source_output": "reviewedDocument",
+      "source_output": "followupDigest",
       "destination_node": {
         "$component_ref": "end"
       },
@@ -194,54 +161,6 @@
         "$component_ref": "end"
       },
       "destination_input": "summary"
-    },
-    {
-      "component_type": "DataFlowEdge",
-      "name": "approval_gate_to_end_userResponse",
-      "source_node": {
-        "$component_ref": "approval_gate"
-      },
-      "source_output": "userResponse",
-      "destination_node": {
-        "$component_ref": "end"
-      },
-      "destination_input": "userResponse"
-    },
-    {
-      "component_type": "DataFlowEdge",
-      "name": "followup_to_approval_gate_followupBundle",
-      "source_node": {
-        "$component_ref": "followup"
-      },
-      "source_output": "followupBundle",
-      "destination_node": {
-        "$component_ref": "approval_gate"
-      },
-      "destination_input": "followupBundle"
-    },
-    {
-      "component_type": "DataFlowEdge",
-      "name": "approval_gate_to_apply_resumePayload",
-      "source_node": {
-        "$component_ref": "approval_gate"
-      },
-      "source_output": "userResponse",
-      "destination_node": {
-        "$component_ref": "apply"
-      },
-      "destination_input": "resumePayload"
-    },
-    {
-      "component_type": "DataFlowEdge",
-      "name": "start_to_apply_agent_run_id",
-      "source_node": {
-        "$component_ref": "start"
-      },
-      "source_output": "agent_run_id",
-      "destination_node": {
-        "$component_ref": "apply"
-      },
-      "destination_input": "agent_run_id"
     }
   ],
   "$referenced_components": {
@@ -294,7 +213,7 @@
       "url": "{{CINATRA_BASE_URL}}/api/llm-bridge",
       "http_method": "POST",
       "data": {
-        "system": "You are an email follow-up drafting agent. Generate a follow-up email sequence for an outreach campaign and return it as JSON with exactly three top-level keys: {\"followupBundle\":{\"draftedEmails\":[{\"recipientId\":\"follow-up-<stepNumber>\",\"recipientName\":\"\",\"recipientEmail\":\"\",\"subject\":\"<subject>\",\"body\":\"<body>\",\"followUpDay\":<day offset>}],\"summary\":\"<one sentence summary>\"},\"followupDigest\":\"<markdown>\",\"summary\":\"<same one sentence summary>\"}. `followupDigest` MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one `## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by `**Subject:** <subject>` then the body — never independently redrafted content. PERSIST STEP — BEFORE returning the JSON, call objects_save EXACTLY ONCE to write the generated bundle as this run's pre-gate follow-up-bundle record so the re-entrant review gate can load and update it. Use exactly this structure:\n  objects_save({\"typeHint\":\"@cinatra-ai/campaigns:email-followup-bundle\",\"rawData\":{\"cinatra_agent_run_id\":\"<the agent_run_id input>\",\"campaignId\":\"<the campaignId input>\",\"draftedEmails\":[ ...the SAME draftedEmails array you return in followupBundle... ],\"summary\":\"<the same summary>\"}})\nCall objects_save once only — do not save any other object type and do not send email; this agent only drafts follow-ups.\n\nYou are the email follow-up generation stage of an email outreach workflow.\n\n## Inputs\n\n- `campaignId` — UUID of the outreach campaign\n- `followUpDays` — array of integers (cadence in days). Collected from the user via the\n  `follow-up-cadence` renderer.\n- `agent_run_id` — injected by the runtime (hidden)\n\n## Steps\n\nSTEP 1 — Generate follow-up sequence:\nFor each step in the cadence (one per integer in `followUpDays`), draft a follow-up email\naligned with the campaign's tone and value proposition. Follow-up templates are shared across\nall recipients — do not personalise to a specific company.\n\nSTEP 2 — Return output:\nReturn a single JSON object with exactly three top-level keys:\n\n```json\n{\n  \"followupBundle\": {\n    \"draftedEmails\": [\n      {\n        \"recipientId\": \"follow-up-<stepNumber>\",\n        \"recipientName\": \"\",\n        \"recipientEmail\": \"\",\n        \"subject\": \"<subject>\",\n        \"body\": \"<body>\",\n        \"followUpDay\": <day offset>\n      }\n    ],\n    \"summary\": \"<one sentence summary>\"\n  },\n  \"followupDigest\": \"<markdown>\",\n  \"summary\": \"<same one sentence summary>\"\n}\n```\n\n`followupBundle` is the structured contract the reviewer approval-gate renders. `followupDigest`\nMUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one\n`## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by\n`**Subject:** <subject>` then the body — never independently redrafted content. `summary` mirrors\n`followupBundle.summary` and is the artifact title source.\n\nSTEP 3 — Persist the bundle. BEFORE returning the JSON, call `objects_save` EXACTLY ONCE to write\nthe generated bundle as this run's pre-gate follow-up-bundle record. The re-entrant review gate\nloads THIS object, the operator edits it, and the post-approval `apply` node updates it in place —\nso the bundle MUST exist before the gate. Use exactly this structure:\n\n```json\nobjects_save({\n  \"typeHint\": \"@cinatra-ai/campaigns:email-followup-bundle\",\n  \"rawData\": {\n    \"cinatra_agent_run_id\": \"<the agent_run_id input>\",\n    \"campaignId\": \"<the campaignId input>\",\n    \"draftedEmails\": [ ...the SAME draftedEmails array you return in followupBundle... ],\n    \"summary\": \"<the same summary>\"\n  }\n})\n```\n\nCall `objects_save` once only, and save no other object type. The run id is stamped automatically\nfrom the run context; the reviewed content (not this generated pre-image) is what the flow's\nterminal artifact carries — the `apply` node regenerates the digest server-side from the\noperator-approved bundle.\n\n## Follow-up draft quality standards\n\n- No numbered or meta subject lines like \"follow-up 2\" — write subject lines based on actual content.\n- Rewrite the value proposition in original wording.\n- Less salesy, less pushy tone — audience is technical.\n- Mention a relevant pain point or reason this follow-up matters.\n- Use the campaign context to make each follow-up individually relevant.\n- Use a generic greeting (for example, \"Hi there,\") rather than a literal contact name; the cadence is shared across recipients.\n- Do not paste timing information (\"this is day 7\") into the email body.\n\nWhen globally rewriting follow-up drafts:\n- Use `stepNumber` and `followUpDay` to understand sequence order.\n- If the instruction targets one specific follow-up, change only that draft (in both\n  `followupBundle` and `followupDigest`) and return others unchanged.\n- Keep greeting placeholders intact.\n\n## What I retrieve myself (MCP)\n\n`objects_save` — called once (STEP 3) to persist the generated follow-up bundle as this run's\npre-gate record so the re-entrant review gate can load and update it. No read tools; no other\nwrites.",
+        "system": "You are an email follow-up drafting agent. Generate a follow-up email sequence for an outreach campaign and return it as JSON with exactly three top-level keys: {\"followupBundle\":{\"draftedEmails\":[{\"recipientId\":\"follow-up-<stepNumber>\",\"recipientName\":\"\",\"recipientEmail\":\"\",\"subject\":\"<subject>\",\"body\":\"<body>\",\"followUpDay\":<day offset>}],\"summary\":\"<one sentence summary>\"},\"followupDigest\":\"<markdown>\",\"summary\":\"<same one sentence summary>\"}. `followupDigest` MUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one `## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by `**Subject:** <subject>` then the body — never independently redrafted content. PERSIST STEP — BEFORE returning the JSON, call objects_save EXACTLY ONCE to write the generated bundle as this run's durable follow-up-bundle record. Use exactly this structure:\n  objects_save({\"typeHint\":\"@cinatra-ai/campaigns:email-followup-bundle\",\"rawData\":{\"cinatra_agent_run_id\":\"<the agent_run_id input>\",\"campaignId\":\"<the campaignId input>\",\"draftedEmails\":[ ...the SAME draftedEmails array you return in followupBundle... ],\"summary\":\"<the same summary>\"}})\nCall objects_save once only — do not save any other object type and do not send email; this agent only drafts follow-ups.\n\nYou are the email follow-up generation stage of an email outreach workflow.\n\n## Inputs\n\n- `campaignId` — UUID of the outreach campaign\n- `followUpDays` — array of integers (cadence in days). Collected from the user via the\n  `follow-up-cadence` renderer.\n- `agent_run_id` — injected by the runtime (hidden)\n\n## Steps\n\nSTEP 1 — Generate follow-up sequence:\nFor each step in the cadence (one per integer in `followUpDays`), draft a follow-up email\naligned with the campaign's tone and value proposition. Follow-up templates are shared across\nall recipients — do not personalise to a specific company.\n\nSTEP 2 — Return output:\nReturn a single JSON object with exactly three top-level keys:\n\n```json\n{\n  \"followupBundle\": {\n    \"draftedEmails\": [\n      {\n        \"recipientId\": \"follow-up-<stepNumber>\",\n        \"recipientName\": \"\",\n        \"recipientEmail\": \"\",\n        \"subject\": \"<subject>\",\n        \"body\": \"<body>\",\n        \"followUpDay\": <day offset>\n      }\n    ],\n    \"summary\": \"<one sentence summary>\"\n  },\n  \"followupDigest\": \"<markdown>\",\n  \"summary\": \"<same one sentence summary>\"\n}\n```\n\n`followupBundle` is the structured contract the follow-up drafts surface renders. `followupDigest`\nMUST be a verbatim Markdown rendering of `followupBundle.draftedEmails` — one\n`## Follow-up <stepNumber> (day <followUpDay>)` section per drafted email, each followed by\n`**Subject:** <subject>` then the body — never independently redrafted content. `summary` mirrors\n`followupBundle.summary` and is the artifact title source.\n\nSTEP 3 — Persist the bundle. BEFORE returning the JSON, call `objects_save` EXACTLY ONCE to write\nthe generated bundle as this run's durable follow-up-bundle record, so the campaign keeps a\nstructured copy of the drafts independent of the run's terminal artifact. Use exactly this\nstructure:\n\n```json\nobjects_save({\n  \"typeHint\": \"@cinatra-ai/campaigns:email-followup-bundle\",\n  \"rawData\": {\n    \"cinatra_agent_run_id\": \"<the agent_run_id input>\",\n    \"campaignId\": \"<the campaignId input>\",\n    \"draftedEmails\": [ ...the SAME draftedEmails array you return in followupBundle... ],\n    \"summary\": \"<the same summary>\"\n  }\n})\n```\n\nCall `objects_save` once only, and save no other object type. The run id is stamped automatically\nfrom the run context. This record is the GENERATED bundle and is never revised in-flow — it is not\napproved content. Downstream consumers must treat it as canonical only once the platform's review\ngate on this run's follow-up artifact has been resolved with an APPROVE decision; a reject or a\nrequest-changes decision leaves it non-canonical. Do not review, approve, or reject the drafts\nyourself: a human resolves that gate.\n\n## Follow-up draft quality standards\n\n- No numbered or meta subject lines like \"follow-up 2\" — write subject lines based on actual content.\n- Rewrite the value proposition in original wording.\n- Less salesy, less pushy tone — audience is technical.\n- Mention a relevant pain point or reason this follow-up matters.\n- Use the campaign context to make each follow-up individually relevant.\n- Use a generic greeting (for example, \"Hi there,\") rather than a literal contact name; the cadence is shared across recipients.\n- Do not paste timing information (\"this is day 7\") into the email body.\n\nAcross the sequence:\n- Use `stepNumber` and `followUpDay` to understand sequence order.\n- Keep greeting placeholders intact.\n\n## What I retrieve myself (MCP)\n\n`objects_save` — called once (STEP 3) to persist the generated follow-up bundle as this run's\ndurable follow-up-bundle record. No read tools; no other writes.",
         "user": "Execute the follow-up drafting task now and return the result as JSON.\nInputs:\n- campaignId: {{ campaignId }}\n- followUpDays: {{ followUpDays }}\n- agent_run_id: {{ agent_run_id }}",
         "agent_id": "email-follow-up",
         "agent_run_id": "{{ agent_run_id }}",
@@ -349,72 +268,8 @@
         {
           "title": "summary",
           "type": "string"
-        },
-        {
-          "title": "userResponse",
-          "type": "string"
         }
       ]
-    },
-    "approval_gate": {
-      "component_type": "InputMessageNode",
-      "id": "approval_gate",
-      "name": "Review and approve",
-      "metadata": {
-        "cinatra": {
-          "riskClass": "approval",
-          "requiresApproval": true,
-          "renderer": "@cinatra-ai/email-follow-up-agent:email-drafts-review",
-          "a2uiSurfaceId": "reviewer:approval-gate:input",
-          "surfaceGateInputs": true
-        }
-      },
-      "inputs": [
-        {
-          "title": "followupBundle",
-          "type": "object"
-        }
-      ],
-      "outputs": [
-        {
-          "title": "userResponse",
-          "type": "string"
-        }
-      ]
-    },
-    "apply": {
-      "component_type": "ApiNode",
-      "id": "apply",
-      "name": "Persist reviewed follow-ups",
-      "url": "{{CINATRA_BASE_URL}}/api/agents/passthrough",
-      "http_method": "POST",
-      "data": {
-        "tool": "email_outreach_initial_drafts_update",
-        "input": {
-          "resumePayloadJson": "{{ resumePayload }}"
-        },
-        "agent_run_id": "{{ agent_run_id }}"
-      },
-      "outputs": [
-        {
-          "title": "ok",
-          "type": "boolean"
-        },
-        {
-          "title": "reviewedBundle",
-          "type": "object"
-        },
-        {
-          "title": "reviewedDocument",
-          "type": "string"
-        }
-      ],
-      "metadata": {
-        "cinatra": {
-          "riskClass": "draft_update",
-          "requiresApproval": false
-        }
-      }
     }
   }
 }

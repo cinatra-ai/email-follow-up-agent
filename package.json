@@ -7,21 +7,14 @@
   ],
   "description": "Generates follow-up email drafts and schedules their cadence for an email outreach campaign.",
   "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
   "cinatra": {
     "apiVersion": "cinatra.ai/v1",
     "kind": "agent",
     "displayName": "Email Follow-up Agent",
     "dependencies": [
-      {
-        "packageName": "@cinatra-ai/reviewer-agent",
-        "edgeType": "runtime",
-        "versionConstraint": {
-          "kind": "semver-range",
-          "range": "^0.1.0"
-        },
-        "requirement": "required",
-        "kind": "agent"
-      },
       {
         "packageName": "@cinatra-ai/email-artifacts",
         "edgeType": "runtime",
@@ -33,9 +26,6 @@
         "kind": "artifact"
       }
     ],
-    "agentDependencies": {
-      "@cinatra-ai/reviewer-agent": "^0.1.0"
-    },
     "produces": [
       {
         "extension": "@cinatra-ai/email-artifacts",
@@ -57,7 +47,7 @@
     "sourceVersionId": "ff2305ae-0aeb-441a-bce2-813390f38eda",
     "sourceVersionNumber": 1,
     "riskLevel": "low",
-    "hasApprovalGates": true,
+    "hasApprovalGates": false,
     "toolAccess": [],
     "ownerOrgId": null
   }
