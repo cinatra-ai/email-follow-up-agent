@@ -1,10 +1,9 @@
 {
   "name": "@cinatra-ai/email-follow-up-agent",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "Apache-2.0",
   "files": [
-    "cinatra",
-    "skills"
+    "cinatra"
   ],
   "description": "Generates follow-up email drafts and schedules their cadence for an email outreach campaign.",
   "type": "module",
