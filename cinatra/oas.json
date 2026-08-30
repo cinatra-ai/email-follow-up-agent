@@ -174,7 +174,6 @@
             "campaignId"
           ],
           "hidden": [
-            "campaignId",
             "agent_run_id"
           ],
           "inputRenderers": {
