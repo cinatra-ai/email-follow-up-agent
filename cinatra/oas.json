@@ -42,7 +42,40 @@
   "outputs": [
     {
       "title": "followupBundle",
-      "type": "object"
+      "type": "object",
+      "json_schema": {
+        "properties": {
+          "draftedEmails": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "recipientId": {
+                  "type": "string"
+                },
+                "recipientName": {
+                  "type": "string"
+                },
+                "recipientEmail": {
+                  "type": "string"
+                },
+                "subject": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "followUpDay": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
     },
     {
       "title": "followupDigest",
@@ -224,7 +257,40 @@
       "outputs": [
         {
           "title": "followupBundle",
-          "type": "object"
+          "type": "object",
+          "json_schema": {
+            "properties": {
+              "draftedEmails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "recipientName": {
+                      "type": "string"
+                    },
+                    "recipientEmail": {
+                      "type": "string"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "type": "string"
+                    },
+                    "followUpDay": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "summary": {
+                "type": "string"
+              }
+            }
+          }
         },
         {
           "title": "followupDigest",
@@ -249,7 +315,40 @@
       "outputs": [
         {
           "title": "followupBundle",
-          "type": "object"
+          "type": "object",
+          "json_schema": {
+            "properties": {
+              "draftedEmails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "recipientName": {
+                      "type": "string"
+                    },
+                    "recipientEmail": {
+                      "type": "string"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "type": "string"
+                    },
+                    "followUpDay": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "summary": {
+                "type": "string"
+              }
+            }
+          }
         },
         {
           "title": "followupDigest",
