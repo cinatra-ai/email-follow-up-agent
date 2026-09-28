@@ -97,6 +97,9 @@
       "$component_ref": "followup"
     },
     {
+      "$component_ref": "followup_summary"
+    },
+    {
       "$component_ref": "end"
     }
   ],
@@ -113,9 +116,19 @@
     },
     {
       "component_type": "ControlFlowEdge",
-      "name": "followup_to_end",
+      "name": "followup_to_followup_summary",
       "from_node": {
         "$component_ref": "followup"
+      },
+      "to_node": {
+        "$component_ref": "followup_summary"
+      }
+    },
+    {
+      "component_type": "ControlFlowEdge",
+      "name": "followup_summary_to_end",
+      "from_node": {
+        "$component_ref": "followup_summary"
       },
       "to_node": {
         "$component_ref": "end"
@@ -194,6 +207,18 @@
         "$component_ref": "end"
       },
       "destination_input": "summary"
+    },
+    {
+      "component_type": "DataFlowEdge",
+      "name": "followup_to_followup_summary_followupBundle",
+      "source_node": {
+        "$component_ref": "followup"
+      },
+      "source_output": "followupBundle",
+      "destination_node": {
+        "$component_ref": "followup_summary"
+      },
+      "destination_input": "followupBundle"
     }
   ],
   "$referenced_components": {
@@ -305,6 +330,24 @@
         "cinatra": {
           "riskClass": "draft_create",
           "requiresApproval": false
+        }
+      }
+    },
+    "followup_summary": {
+      "component_type": "OutputMessageNode",
+      "id": "followup_summary",
+      "name": "Follow-up result",
+      "inputs": [
+        {
+          "title": "followupBundle",
+          "type": "object",
+          "default": null
+        }
+      ],
+      "message": "{# pyagentspec-input-hint (do not remove): {{ followupBundle }} #}{% if not followupBundle or not followupBundle.draftedEmails %}No follow-up email was written in this run: the cadence named no day to follow up on, or no follow-up could be written for it.{% else %}{{ followupBundle.draftedEmails | length }} follow-up emails were written and filed in the follow-up digest.{% endif %}",
+      "metadata": {
+        "cinatra": {
+          "purpose": "plain-language-follow-up-ending"
         }
       }
     },

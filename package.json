@@ -5,7 +5,7 @@
   "files": [
     "cinatra"
   ],
-  "description": "Generates follow-up email drafts and schedules their cadence for an email outreach campaign.",
+  "description": "Generates follow-up email drafts and schedules their cadence for an email outreach campaign. Its review is not a step of the run: once the run files the follow-up digest, the digest's review opens on its own, and the run never waits for it.",
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.mjs"
