@@ -216,3 +216,23 @@ test("an output message's input defaults fit their declared type", () => {
     "the type of the default value of property is not compatible with its json schema: " + offenders.join(", "),
   );
 });
+
+test("(8) every start input the runtime demands is one the start form asks for", () => {
+  const meta = start.metadata.cinatra;
+  const required = meta.required ?? [];
+  const hidden = meta.hidden ?? [];
+  const platformWritten = ["cinatra_run_id", "agent_run_id"];
+  const unasked = oas.inputs
+    .filter((i) => !Object.hasOwn(i, "default"))
+    .map((i) => i.title)
+    .filter((title) => !platformWritten.includes(title))
+    .filter((title) => !required.includes(title) || hidden.includes(title));
+  assert.deepEqual(unasked, [], "the runtime demands an input the start form never asks for: " + unasked.join(", "));
+  assert.ok(required.includes("followUpDays"), "the follow-up cadence is not asked for");
+  assert.ok(!hidden.includes("followUpDays"), "the follow-up cadence is hidden from the start form");
+  assert.equal(meta.inputRenderers?.followUpDays, pkg.name + ":follow-up-cadence", "the cadence is no longer drawn by its own renderer");
+  const field = start.inputs.find((i) => i.title === "followUpDays");
+  assert.ok(field && !Object.hasOwn(field, "default"), "the start form's cadence is defaulted away");
+  const flowLevel = oas.inputs.find((i) => i.title === "followUpDays");
+  assert.ok(flowLevel && !Object.hasOwn(flowLevel, "default"), "the flow's cadence input is defaulted away");
+});
