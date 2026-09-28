@@ -229,7 +229,8 @@
       "metadata": {
         "cinatra": {
           "required": [
-            "campaignId"
+            "campaignId",
+            "followUpDays"
           ],
           "hidden": [
             "agent_run_id"
