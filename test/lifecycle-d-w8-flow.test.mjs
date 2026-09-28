@@ -108,7 +108,7 @@ test("(19) an empty follow-up run ends in plain language", () => {
   assert.match(message, /follow-up emails were written/i, "a run with follow-ups has no plain-language ending");
   assert.match(outsideComment(message), /\bfollowupBundle\b/, "the sentence never reads the follow-up bundle");
   assert.equal(summary.metadata?.cinatra?.purpose, "plain-language-follow-up-ending");
-  assert.deepEqual(summary.inputs, [{ title: "followupBundle", type: "object", default: null }]);
+  assert.deepEqual(summary.inputs, [{ title: "followupBundle", type: "object", default: {} }]);
   assert.equal(countDataEdges("followup.followupBundle", "followup_summary.followupBundle"), 1);
 });
 
@@ -182,4 +182,37 @@ test("an output message declares only inputs its template reads", () => {
     }
   }
   assert.deepEqual(offenders, [], "the runtime rejects an input the template never reads: " + offenders.join(", "));
+});
+
+/** The runtime's rule for a declared default: it must fit the input's JSON
+ *  schema type, and null fits only a type that names "null". */
+function defaultFitsType(value, type) {
+  const types = Array.isArray(type) ? type : [type];
+  return types.some((t) => {
+    if (t === "null") return value === null;
+    if (t === "object") return value !== null && typeof value === "object" && !Array.isArray(value);
+    if (t === "array") return Array.isArray(value);
+    if (t === "string") return typeof value === "string";
+    if (t === "boolean") return typeof value === "boolean";
+    if (t === "number") return typeof value === "number";
+    if (t === "integer") return Number.isInteger(value);
+    return false;
+  });
+}
+
+test("an output message's input defaults fit their declared type", () => {
+  const offenders = [];
+  for (const node of nodesOfType("OutputMessageNode")) {
+    for (const input of node.inputs ?? []) {
+      if (!Object.hasOwn(input, "default")) continue;
+      if (!defaultFitsType(input.default, input.type)) {
+        offenders.push(`${node.id}.${input.title}=${JSON.stringify(input.default)}`);
+      }
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "the type of the default value of property is not compatible with its json schema: " + offenders.join(", "),
+  );
 });

@@ -341,7 +341,7 @@
         {
           "title": "followupBundle",
           "type": "object",
-          "default": null
+          "default": {}
         }
       ],
       "message": "{# pyagentspec-input-hint (do not remove): {{ followupBundle }} #}{% if not followupBundle or not followupBundle.draftedEmails %}No follow-up email was written in this run: the cadence named no day to follow up on, or no follow-up could be written for it.{% else %}{{ followupBundle.draftedEmails | length }} follow-up emails were written and filed in the follow-up digest.{% endif %}",
